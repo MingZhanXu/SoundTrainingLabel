@@ -10,6 +10,9 @@ class SqlCommands:
         self.table_name = table_name
         self.initialization_connect()
 
+    # Print SQL message
+    def sql_print(self, *args, **kwargs):
+        print(f'{self.timestamp()} [SQL]', *args, **kwargs, end="")
     # Timestamp string
     def timestamp(self):
         return datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f') + '{:03d}'.format(datetime.now().microsecond % 1000)
@@ -46,9 +49,9 @@ class SqlCommands:
     def connect_to_database(self):
         try:
             self.conn = sqlite3.connect(f'{self.db_name}.db')
-            print("Opened database successfully")
+            self.sql_print("Opened database successfully")
         except Exception as e:
-            print("SQL Open Error: ", e)
+            self.sql_print("SQL Open Error: ", e)
             exit()
 
     # Create table if not exists
@@ -58,26 +61,26 @@ class SqlCommands:
             sql = self.check_table_sql
             cursor.execute(sql)
             result = cursor.fetchone()
-            print(result)
+            self.sql_print(result)
             if result is None:
                 try:
                     sql = self.create_table_sql
                     cursor.execute(sql)
-                    print("Table created successfully")
+                    self.sql_print("Table created successfully")
                 except Exception as e:
-                    print("SQL Table Error[1]: ", e)
+                    self.sql_print("SQL Table Error[1]: ", e)
                     exit()
             else:
-                print("Table already exists")
+                self.sql_print("Table already exists")
         except Exception as e:
-            print("SQL Table Error[2]: ", e)
+            self.sql_print("SQL Table Error[2]: ", e)
             exit()
 
     # Register a function to close the database connection at exit
     def close_connection(self):
         if self.conn:
             self.conn.close()
-            print("Database connection closed")
+            self.sql_print("Database connection closed")
 
     # Initialize connection
     def initialization_connect(self):
@@ -93,9 +96,9 @@ class SqlCommands:
             cursor = self.conn.cursor()
             cursor.execute(self.insert_data, (file_path, ts))
             self.conn.commit()
-            print("Record inserted successfully")
+            self.sql_print("Record inserted successfully")
         except Exception as e:
-            print("SQL Insert Error: ", e)
+            self.sql_print("SQL Insert Error: ", e)
             exit()
 
     # Select all records
@@ -107,7 +110,7 @@ class SqlCommands:
             records = [record for record in records]
             return records
         except Exception as e:
-            print("SQL Select Error: ", e)
+            self.sql_print("SQL Select Error: ", e)
             exit()
 
     # Select latest record
@@ -118,7 +121,7 @@ class SqlCommands:
             record = cursor.fetchone()
             return record
         except Exception as e:
-            print("SQL Select Error: ", e)
+            self.sql_print("SQL Select Error: ", e)
             return None
 
     # Delete by timestamp
@@ -127,10 +130,10 @@ class SqlCommands:
             cursor = self.conn.cursor()
             cursor.execute(self.delete_by_timestamp_sql, (timestamp,))
             self.conn.commit()
-            print("Record deleted successfully")
+            self.sql_print("Record deleted successfully")
             return True
         except Exception as e:
-            print("SQL Delete Error: ", e)
+            self.sql_print("SQL Delete Error: ", e)
             return None
 
     # Delete last record
@@ -146,8 +149,8 @@ if __name__ == '__main__':
         input_file_path = f'test.mp4{i}'
         sql.insert_file_path(input_file_path)
 
-    print()
+    self.sql_print()
     last_timestamp = sql.select_latest_record()
-    print(sql.select_latest_record())
+    self.sql_print(sql.select_latest_record())
     # 模擬刪除最後一筆紀錄
     sql.delete_last_record()
