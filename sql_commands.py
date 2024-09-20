@@ -119,7 +119,7 @@ class SqlCommands:
             return record
         except Exception as e:
             print("SQL Select Error: ", e)
-            exit()
+            return None
 
     # Delete by timestamp
     def delete_by_timestamp(self, timestamp):
@@ -128,9 +128,10 @@ class SqlCommands:
             cursor.execute(self.delete_by_timestamp_sql, (timestamp,))
             self.conn.commit()
             print("Record deleted successfully")
+            return True
         except Exception as e:
             print("SQL Delete Error: ", e)
-            exit()
+            return None
 
     # Delete last record
     def delete_last_record(self):
