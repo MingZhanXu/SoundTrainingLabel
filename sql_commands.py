@@ -149,8 +149,8 @@ if __name__ == '__main__':
         input_file_path = f'test.mp4{i}'
         sql.insert_file_path(input_file_path)
 
-    self.sql_print()
+    sql.sql_print()
     last_timestamp = sql.select_latest_record()
-    self.sql_print(sql.select_latest_record())
+    sql.sql_print(sql.select_latest_record())
     # 模擬刪除最後一筆紀錄
     sql.delete_last_record()
