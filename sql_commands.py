@@ -12,7 +12,8 @@ class SqlCommands:
 
     # Print SQL message
     def sql_print(self, *args, **kwargs):
-        print(f'{self.timestamp()} [SQL]', *args, **kwargs, end="")
+        # print(f'{self.timestamp()} [SQL]', *args, **kwargs, end="")
+        pass
     # Timestamp string
     def timestamp(self):
         return datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f') + '{:03d}'.format(datetime.now().microsecond % 1000)
@@ -38,7 +39,7 @@ class SqlCommands:
         self.select_table_sql = '''
             SELECT * FROM {table_name};
             '''.format(table_name=self.table_name)
-        self.select_latest_record_sql = '''
+        self.select_latest_data_sql = '''
             SELECT * FROM {table_name} ORDER BY TIMESTAMP DESC LIMIT 1;
             '''.format(table_name=self.table_name)
         self.delete_by_timestamp_sql = '''
@@ -96,30 +97,30 @@ class SqlCommands:
             cursor = self.conn.cursor()
             cursor.execute(self.insert_data, (file_path, ts))
             self.conn.commit()
-            self.sql_print("Record inserted successfully")
+            self.sql_print("Data inserted successfully")
         except Exception as e:
             self.sql_print("SQL Insert Error: ", e)
             exit()
 
-    # Select all records
-    def select_all_records(self):
+    # Select all data
+    def select_all_data(self):
         try:
             cursor = self.conn.cursor()
             cursor.execute(self.select_table_sql)
-            records = cursor.fetchall()
-            records = [record for record in records]
-            return records
+            dataset = cursor.fetchall()
+            dataset = [data for data in dataset]
+            return dataset
         except Exception as e:
             self.sql_print("SQL Select Error: ", e)
             exit()
 
-    # Select latest record
-    def select_latest_record(self):
+    # Select latest data
+    def select_latest_data(self):
         try:
             cursor = self.conn.cursor()
-            cursor.execute(self.select_latest_record_sql)
-            record = cursor.fetchone()
-            return record
+            cursor.execute(self.select_latest_data_sql)
+            data = cursor.fetchone()
+            return data
         except Exception as e:
             self.sql_print("SQL Select Error: ", e)
             return None
@@ -130,16 +131,20 @@ class SqlCommands:
             cursor = self.conn.cursor()
             cursor.execute(self.delete_by_timestamp_sql, (timestamp,))
             self.conn.commit()
-            self.sql_print("Record deleted successfully")
+            self.sql_print("Data deleted successfully")
             return True
         except Exception as e:
             self.sql_print("SQL Delete Error: ", e)
             return None
 
-    # Delete last record
-    def delete_last_record(self):
-        timestamp = self.select_latest_record()[0]
-        self.delete_by_timestamp(timestamp)
+    # Delete last data
+    def delete_last_data(self):
+        try:
+            timestamp = self.select_latest_data()[0]
+            self.delete_by_timestamp(timestamp)
+            return True
+        except Exception as _:
+            return None
 
 if __name__ == '__main__':
     # 初始設定
@@ -150,7 +155,7 @@ if __name__ == '__main__':
         sql.insert_file_path(input_file_path)
 
     sql.sql_print()
-    last_timestamp = sql.select_latest_record()
-    sql.sql_print(sql.select_latest_record())
+    last_timestamp = sql.select_latest_data()
+    sql.sql_print(sql.select_latest_data())
     # 模擬刪除最後一筆紀錄
-    sql.delete_last_record()
+    sql.delete_last_data()

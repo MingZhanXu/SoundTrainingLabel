@@ -3,7 +3,7 @@ import traceback
 from wcwidth import wcswidth
 import msvcrt
 import inspect
-
+from sql_commands import SqlCommands
 # Error type
 class PageInfoError(Exception):
     def __init__(self, message):
@@ -25,17 +25,13 @@ class UIError(Exception):
         return f"UIError: {super().__str__()} {stack_info}"
     
 class PageInfo:
-    def __init__(self, page_type: list[str], page_name: list[list[str]], start_index=1):
-        self.__type = page_type
+    def __init__(self, page_name: list[list[str]], start_index=1):
         self.__name = page_name
         self.__page = 0
-        self.check_input_data_formation(file_type, file_name)
-        self.__max_page = len(file_name)
+        self.check_input_data_formation(page_name)
+        self.__max_page = len(page_name)
         self.__max_index = 10 - start_index
         self.init_name()
-    # getter
-    def type(self):
-        return self.__type[self.page()]
     def names(self):
         return self.__name[self.page()]
     def page(self):
@@ -46,14 +42,8 @@ class PageInfo:
         return self.__max_index
     
     # initialization
-    def check_input_data_formation(self, file_type, file_name):
-        type_len = len(file_type)
-        name_len = len(file_name)
-        if name_len > type_len:
-            raise PageInfoError("name_len is greater than type_len, both lengths must be equal")
-        elif type_len > name_len:
-            raise PageInfoError("type_len is greater than name_len, both lengths must be equal")
-        for i, page_name in enumerate(file_name):
+    def check_input_data_formation(self, page_name):
+        for i, page_name in enumerate(page_name):
             if not isinstance(page_name, (tuple, list)):
                 raise PageInfoError(f"file_name[{i}] type is {type(file_name[i])}, type must tuple or list")
 
@@ -98,14 +88,15 @@ class UIFunction(Status):
             func_name = self.__function.__name__
             func_signature = str(sig)
             raise TypeError(f"__function '{func_name}' don't agree with the provided arguments: {e}. It accepts: {func_signature}") from None
-        self.__function(*args, **kwargs)
+        result = self.__function(*args, **kwargs)
+        return result
 
 class UI(PageInfo):
-    def __init__(self, file_type, file_name, function: list[UIFunction], start_index=1):
-        super().__init__(file_type, file_name, start_index)
-        if len(file_name) != len(function):
+    def __init__(self, page_name, function: list[UIFunction], start_index=1):
+        super().__init__(page_name, start_index)
+        if len(page_name) != len(function):
             raise UIError("The length of file_name and function must be equal")
-        self.__no_none_name = [list(filter(None, names)) for names in file_name]
+        self.__no_none_name = [list(filter(None, names)) for names in page_name]
         self.__function = function
         # set ui message
         self.__title = "|\t\t\t      | [ESC] 結束程式\t\t  |\n|   第%s頁\t\t      | [D] 刪除最後一筆\t  |"
@@ -159,6 +150,7 @@ class UI(PageInfo):
 
     def clear_screen(self):
         os.system('cls' if os.name == 'nt' else 'clear')
+        
     def show_info(self, last_file=None):
         page = self.page()
         self.print_flush(self.__up_divider)
@@ -181,29 +173,34 @@ class UI(PageInfo):
         else:
             self.print_flush(self.__last_file % last_file)
 
-    def show(self):
+    def show(self, last_file=None):
         self.clear_screen()
-        self.show_info()
+        self.show_info(last_file)
     def exit(self):
         self.print_flush(self.__end)
     def run_function(self, index, *args, **kwargs):
         running = self.__function[self.page()].running()
-        finish = self.__function[self.page()].finish()
         if index > len(self.__no_none_name[self.page()]) - 1:
             self.print_flush(self.__no_index, end="")
             return None
         self.print_flush(self.__running % running, end="")
-        self.__function[self.page()].run(*args, **kwargs)
+        result = self.__function[self.page()].run(*args, **kwargs)
+        
+        return result
+    def finish_function(self):
+        finish = self.__function[self.page()].finish()
         self.print_flush("\r", end="")
         self.print_flush(self.__finish % finish, end="")
-        
 def get_key():
         try:
             key = msvcrt.getch().decode('utf-8')
             return key
         except UnicodeDecodeError:
             return None
-        
+
+
+def print_i(i):
+    print(i)
 if __name__ == "__main__":
     # error test
     try:
@@ -216,17 +213,16 @@ if __name__ == "__main__":
     except Exception as e:
         print(e)
 
-    file_type = ["mp4", "mp4"]
     file_name = [
         ["up", "down", "left", "right", "start", "rotation", "stop"],
         ["上", "下", "左", "右", "開始", "旋轉", "停止"],
         ]
     ui_function = [
-        UIFunction(title="錄製", running="錄音中", finish="錄音完畢"),
-        UIFunction(title="錄製", running="錄音中", finish="錄音完畢"),
+        UIFunction(title="錄製", running="錄音中", finish="錄音完畢", function=print_i),
+        UIFunction(title="錄製", running="錄音中", finish="錄音完畢", function=print_i),
         # UIFunction(title="錄製", running="錄音中", finish="錄音完畢"),
     ]
-    ui = UI(file_type, file_name, ui_function)
+    ui = UI(file_name, ui_function)
     ui.show()
     while True:
         key = get_key()
@@ -243,4 +239,4 @@ if __name__ == "__main__":
             break
         elif key > "0" and key <= "9":
             ui.show()
-            ui.run_function(int(key) - 1)
+            ui.run_function(int(key) - 1, key)

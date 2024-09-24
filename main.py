@@ -1,93 +1,72 @@
 from recording import Recorder
 from sql_commands import SqlCommands
+from cmd_ui import UIFunction, UI, get_key
+import os
 
-# Get the last file path from the database
-def get_last_file(sql):
-    result = sql.select_latest_record()
-    if result is not None:
-        return result[1]
-    return None
+def get_file_sequence(file_path):
+    file_sequence = []
+    for file in os.listdir(file_path):
+        if file.endswith(".wav"):
+            file_sequence.append(file)
+    return file_sequence
 
-# ui next page
-def next_page(record, sql):
-    last_file = get_last_file(sql)
-    record.next_page(last_file)
-
-# ui previous page
-def previous_page(record, sql):
-    last_file = get_last_file(sql)
-    record.previous_page(last_file)
-
-# ui delete last record
-def delete_last_record(sql, record):
-    last_file = get_last_file(sql)
-    if last_file is None:
-        record.print_msg(last_file)
-        record.print_flush(record.no_data_delete, end="")
-        return None
-    try:
-        record.delete_file(last_file)
-        sql.delete_last_record()
-        last_file = get_last_file(sql)
-        record.print_msg(last_file)
-        record.print_flush(record.delete_success, end="")
-    except Exception as e:
-        try:
-            sql.delete_last_record()
-            last_file = get_last_file(sql)
-        except Exception as e:
-            record.print_msg(last_file)
-            record.print_flush(record.delete_error % e, end="")
-        record.print_msg(last_file)
-        record.print_flush(record.delete_error % e, end="")
-
-# record audio
-def record_audio(record, sql, key):   
-    index = int(key) - int("1")
-    last_file = get_last_file(sql)
-    if index > len(record.file_name[record.page]) - 1:
-        record.print_msg(last_file)
-    else:
-        # set file information
-        seq = record.file_data[record.file_name[record.page][index]]
-        file_name = record.file_name[record.page][index]
-        save_path = f"page{record.page + 1}/{file_name}"
-        # record audio
-        record.record_audio(save_path, file_name, seq)
-        record.add_file_count(index)
-        record.print_msg(last_file)
-        record.print_flush(record.finish, end="")
-        full_file_path = f"./{save_path}/{file_name}{seq}.wav"
-        sql.insert_file_path(full_file_path)
-        # reshow the last file
-        last_file = sql.select_latest_record()[1]
-        record.print_msg(last_file)
-        record.print_flush(record.finish, end="")
-
-# if you want to run the program, you can use this function
-def run():
-    sql = SqlCommands()
-    record = Recorder(start_index=1)
-    last_file = get_last_file(sql)
-    record.print_msg(last_file)
-    while True:
-        key = record.get_key()
-        last_file = get_last_file(sql)
-
-        if key == "n" or key == "N":
-            next_page(record, sql)
-        elif key == "p" or key == "P":
-            previous_page(record, sql)
-        elif key == "d" or key == "D":
-            delete_last_record(sql, record)
-        elif key == '\x1b':  # ESC key
-            record.exit()
-            break
-        elif key >= "1" and key <="9":
-            record_audio(record, sql, key)
-        else:
-            record.print_msg(last_file)
-            record.print_flush(record.no_function_key, end="")
 
 if __name__ == "__main__":
-    run()
+    sql = SqlCommands()
+    sql.connect_to_database()
+    recorder = Recorder()
+    page_name = [
+        ["up", "down", "left", "right", "start", "rotation", "stop"],
+        ["上", "下", "左", "右", "開始", "旋轉", "停止"],
+    ]
+    ui_functions = [
+        UIFunction(title="錄製", running="錄音中", finish="錄音完畢", function=recorder.record_audio),
+        UIFunction(title="錄製", running="錄音中", finish="錄音完畢", function=recorder.record_audio),
+    ]
+    ui = UI(page_name, ui_functions)
+    try:
+        last_file = sql.select_latest_data()[1]
+    except Exception as e:
+        print(e)
+        last_file = None
+    ui.show(last_file)
+    while True:
+        try:
+            last_file = sql.select_latest_data()[1]
+        except Exception as e:
+            last_file = None
+        key = get_key()
+        if key is None:
+            continue
+        if key == "p":
+            ui.previous_page()
+            ui.show(last_file)
+        elif key == "n":
+            ui.next_page()
+            ui.show(last_file)
+        elif key == "\x1b":
+            ui.exit()
+            break
+        elif key == "d":
+            sql.delete_last_data()
+            try:
+                last_file = sql.select_latest_data()[1]
+            except Exception as e:
+                last_file = None
+            ui.show(last_file)
+        elif key > "0" and key <= "9":
+            ui.show(last_file)
+            file_name = ui.names()[int(key) - 1]
+            if file_name is not None:
+                save_path = os.path.join(os.getcwd(), f"page_{ui.page() + 1}", file_name)
+            else:
+                save_path = os.getcwd()
+            path = ui.run_function(int(key) - 1, save_path, file_name)
+            if file_name is not None:
+                sql.insert_file_path(path)
+                try:
+                    last_file = sql.select_latest_data()[1]
+                except Exception as e:
+                    last_file = None
+                ui.show(last_file)
+                ui.finish_function()
