@@ -1,6 +1,6 @@
-from recording import Recorder
-from sql_commands import SqlCommands
-from cmd_ui import UIFunction, UI, get_key
+from lib.recording import Recorder
+from lib.sql_commands import SqlCommands
+from lib.cmd_ui import UIFunction, UI, get_key
 import os
 
 def get_file_sequence(file_path):

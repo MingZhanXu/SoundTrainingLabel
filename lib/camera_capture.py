@@ -56,7 +56,7 @@ class CameraCapture():
         return result
         
 if __name__ == "__main__":
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(1)
     camera = CameraCapture(cap)
     camera.start_status()
     save_path = "tmp"
@@ -65,7 +65,10 @@ if __name__ == "__main__":
     print(file_path)
     while True:
         # continue
-        key = msvcrt.getch().decode("utf-8")
+        try:
+            key = msvcrt.getch().decode("utf-8")
+        except Exception:
+            key = None
         print(key, key=="q")
         if key == "q":
             camera.stop_status()
