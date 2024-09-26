@@ -22,9 +22,12 @@ class UI(PageInfo, UIPage):
     def show_info(self, last_file=None):
         func_type = self.__function[self.page()].title()
         super().show_page(self.names(), func_type, self.page_info(), last_file)
-    def finish_function(self):
-        finish = self.__function[self.page()].finish()
-        super().finish_function(self, finish)
+    def finish_function(self, index):
+        finish = self.__function[self.page()].finish_title()
+        if index > len(self.__no_none_name[self.page()]) - 1:
+            super().no_index()
+            return None
+        super().finish_function(finish)
 
     def run_function(self, index, arg_kwargs: ArgsKwargs):
         running = self.__function[self.page()].title()
@@ -63,15 +66,12 @@ class UI(PageInfo, UIPage):
 
     def stop_status(self, args_kwargs = list[ArgsKwargs|None]):
         for page in range(self.max_page()):
-            if args_kwargs[page] is None:
-                self.__status_function[page][1]()
-                continue
-            args = args_kwargs[page].args()
-            kwargs = args_kwargs[page].kwargs()
-            self.__status_function[page][1](*args, **kwargs)
+            self.__status_function[page].finish(args_kwargs[page])
 
-
-
+    def end(self, args_kwargs = list[ArgsKwargs|None]|None):
+        super().exit()
+        self.stop_status(args_kwargs)
+        
 def print_i():
     pass
 if __name__ == "__main__":

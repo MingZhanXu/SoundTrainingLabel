@@ -7,8 +7,9 @@ def null_function(*args, **kwargs):
     pass
 class UIFunction(Status):
     def __init__(self,title= "null", running= "running",  finish= "finish", function=null_function):
-        super().__init__(running, finish)
+        super().__init__(running)
         self.__title = title
+        self.__finish = finish
         self.__function = function
     def title(self):
         return self.__title
@@ -23,3 +24,5 @@ class UIFunction(Status):
             raise TypeError(f"__function '{func_name}' don't agree with the provided arguments: {e}. It accepts: {func_signature}") from None
         result = self.__function(*args, **kwargs)
         return result
+    def finish_title(self):
+        return self.__finish

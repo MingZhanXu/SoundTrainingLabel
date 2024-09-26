@@ -3,6 +3,10 @@ import os
 from time import sleep
 import threading
 import msvcrt
+import logging
+
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+
 class CameraCapture():
     def __init__(self, cap, window_name="camera"):
         self.__cap = cap
@@ -23,7 +27,12 @@ class CameraCapture():
     def start_status(self):
         self.__status = True
         self.__threading_event.clear()
-        self.__show_thread.start()
+        try:
+            self.__show_thread = threading.Thread(target=self.__show_img_thread)
+            self.__show_thread.start()
+        except Exception as _:
+            # print(e)
+            pass
 
     def stop_status(self):
         self.__status = False
@@ -35,11 +44,13 @@ class CameraCapture():
         while True:
             self.__frame = self.capture()
             if self.__status:
-                cv2.imshow(self.__window_name, self.__frame)
+                if self.__frame is not None and self.__frame.size > 0:
+                    cv2.imshow(self.__window_name, self.__frame)
                 cv2.waitKey(1)
             else:
                 if cv2.getWindowProperty(self.__window_name, cv2.WND_PROP_VISIBLE) >= 1:
                     cv2.destroyWindow(self.__window_name)
+                    # print("destroy window")
                 break
 
     def frame_to_file(self, save_path, file_name):

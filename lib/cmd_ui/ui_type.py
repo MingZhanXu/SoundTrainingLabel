@@ -8,10 +8,12 @@ class ArgsKwargs:
         return self.__kwargs
 
 class Status:
-    def __init__(self, running, finish):
+    def __init__(self, running=None, finish=None):
         self.__running = running
         self.__finish = finish
     def running(self, args_kwargs: ArgsKwargs|None):
+        if self.__running is None:
+            return None
         if args_kwargs is None:
             return self.__running()
         args = args_kwargs.args()
@@ -19,6 +21,8 @@ class Status:
         result = self.__running(*args, **kwargs)
         return result
     def finish(self, args_kwargs: ArgsKwargs|None):
+        if self.__finish is None:
+            return None
         if args_kwargs is None:
             return self.__finish()
         args = args_kwargs.args()

@@ -4,7 +4,7 @@ from lib import UI, UIFunction, PageInfo, ArgsKwargs, Status
 from lib import SqlCommands
 from lib import Recorder
 from lib import CameraCapture
-from lib import get_key
+from lib import get_key, print_flush
 
 def get_file_sequence(file_path, file_type):
     file_sequence = []
@@ -13,7 +13,8 @@ def get_file_sequence(file_path, file_type):
             file_sequence.append(file)
     return file_sequence
 def print_i():
-    print()
+    # print()
+    pass
 
 if __name__ == "__main__":
     index_name = [
@@ -21,7 +22,7 @@ if __name__ == "__main__":
         ["上", "下", "左", "右", "開始", "旋轉", "停止"],
         ["讚上", "讚下", "讚左", "讚右"]
         ]
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(1)
     recorder = Recorder()
     camera_capture = CameraCapture(cap)
     function = [
@@ -41,6 +42,7 @@ if __name__ == "__main__":
         [None, None],
         [None, None]
     ]
+    
     while True:
         key = get_key()
         if key is None:
@@ -50,10 +52,15 @@ if __name__ == "__main__":
         elif key == "n":
             ui.next_page(args_kwargs=status)
         elif key == "\x1b":
-            ui.exit()
+            ui.end([s[1] for s in status])
             break
         elif key > "0" and key <= "9":
             ui.show()
+            index = int(key) - 1
             args_kwargs = ArgsKwargs(save_path="test", file_name="test")
-            result = ui.run_function(int(key) - 1, args_kwargs)
-            print(result)
+            result = ui.run_function(index, args_kwargs)
+            print_flush(f" 檔案已儲存至 {result}")
+            ui.finish_function(index)
+        else:
+            ui.show()
+            ui.no_index()
