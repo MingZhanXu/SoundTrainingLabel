@@ -30,9 +30,9 @@ if __name__ == "__main__":
         UIFunction(title="拍攝", running="拍攝中", finish="拍攝完畢", function=camera_capture.camera_capture),
     ]
     status_function = [
-        Status(camera_capture.start_status, print_i),
-        Status(print_i, camera_capture.start_status),
-        Status(camera_capture.stop_status, camera_capture.stop_status),
+        Status(print_i, print_i),
+        Status(print_i, print_i),
+        Status(camera_capture.start_status, camera_capture.stop_status),
     ]
     ui = UI(index_name, function, status_function)
     ui.show()

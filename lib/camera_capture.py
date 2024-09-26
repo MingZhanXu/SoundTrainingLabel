@@ -10,6 +10,7 @@ class CameraCapture():
         self.__status = False
         self.__frame = None
         self.__threading_event = threading.Event()
+        self.__show_thread = threading.Thread(target=self.__show_img_thread)
 
     def capture(self):
         try:
@@ -22,13 +23,12 @@ class CameraCapture():
     def start_status(self):
         self.__status = True
         self.__threading_event.clear()
-        self.__show_thread = threading.Thread(target=self.__show_img_thread)
         self.__show_thread.start()
 
     def stop_status(self):
         self.__status = False
         self.__threading_event.set()
-        if self.__show_thread is not None:
+        if self.__show_thread.is_alive() == True:
             self.__show_thread.join()
 
     def __show_img_thread(self):
