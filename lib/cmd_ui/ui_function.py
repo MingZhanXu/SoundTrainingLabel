@@ -1,6 +1,6 @@
 import inspect
 
-from ui_type import Status
+from .ui_type import Status
 
 def null_function(*args, **kwargs):
     # This function is intentionally left empty as a placeholder for default behavior.

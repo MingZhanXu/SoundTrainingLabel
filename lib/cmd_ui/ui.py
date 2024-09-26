@@ -1,16 +1,17 @@
 import traceback
-from ui_tool import get_key, clear_screen, print_flush
-from ui_error import UIError
-from ui_type import ArgsKwargs, Status
-from ui_page import PageInfo, UIPage
-from ui_function import UIFunction
+from .ui_tool import get_key, clear_screen, print_flush
+from .ui_error import UIError
+from .ui_type import ArgsKwargs, Status
+from .ui_page import PageInfo, UIPage
+from .ui_function import UIFunction
 
 class UI(PageInfo, UIPage):
     def __init__(self, page_name, function: list[UIFunction], status_function: list[UIFunction|None], start_index=1):
         PageInfo.__init__(self, page_name, start_index)
         UIPage.__init__(self)
         if len(page_name) != len(function):
-            raise UIError("The length of file_name and function must be equal")
+            message = f"The length of file_name and function must be equal, page_name: {len(page_name)}, function: {len(function)}"
+            raise UIError(message)
         self.__no_none_name = [list(filter(None, names)) for names in page_name]
         self.__function = function
         self.__status_function = status_function
@@ -33,25 +34,26 @@ class UI(PageInfo, UIPage):
         super().run_function(running)
         args = arg_kwargs.args()
         kwargs = arg_kwargs.kwargs()
-        result = self.__function[self.page()].run(*args, **kwargs)
+        func = self.__function[self.page()]
+        result = func.run(*args, **kwargs)
         
         return result
     
-    def next_page(self, last_fie=None, args_kwargs = list[ArgsKwargs]):
+    def next_page(self, last_fie=None, args_kwargs = list[list[ArgsKwargs|None]]):
         super().next_page()
         self.show(last_fie)
         self.change_status(args_kwargs)
 
-    def previous_page(self, last_file=None, args_kwargs = list[ArgsKwargs]):
+    def previous_page(self, last_file=None, args_kwargs = list[list[ArgsKwargs|None]]):
         super().previous_page()
         self.show(last_file)
         self.change_status(args_kwargs)
     
-    def start(self, args_kwargs: list[list[ArgsKwargs]], last_file=None):
+    def start(self, args_kwargs: list[list[ArgsKwargs|None]], last_file=None):
         self.show(last_file)
         self.change_status(args_kwargs)
 
-    def change_status(self, args_kwargs = list[list[ArgsKwargs]]):
+    def change_status(self, args_kwargs = list[list[ArgsKwargs|None]]):
         for page in range(self.max_page()):
             __args_kwargs = args_kwargs[page]
             if page == self.page():
@@ -59,17 +61,19 @@ class UI(PageInfo, UIPage):
             else:
                 self.__status_function[page].finish(__args_kwargs[1])
 
-    def stop_status(self, args_kwargs = list[ArgsKwargs]):
+    def stop_status(self, args_kwargs = list[ArgsKwargs|None]):
         for page in range(self.max_page()):
+            if args_kwargs[page] is None:
+                self.__status_function[page][1]()
+                continue
             args = args_kwargs[page].args()
             kwargs = args_kwargs[page].kwargs()
             self.__status_function[page][1](*args, **kwargs)
 
 
 
-def print_i(i):
-    for i in range(i):
-        print(i)
+def print_i():
+    pass
 if __name__ == "__main__":
     # error test
     try:
@@ -81,7 +85,7 @@ if __name__ == "__main__":
         error_file_info = PageInfo(file_type, file_name)
     except Exception as e:
         print(e)
-
+    input("Press Enter to continue...")
     file_name = [
         ["up", "down", "left", "right", "start", "rotation", "stop"],
         ["上", "下", "左", "右", "開始", "旋轉", "停止"],

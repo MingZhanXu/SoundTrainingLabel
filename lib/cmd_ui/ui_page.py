@@ -1,7 +1,7 @@
 from wcwidth import wcswidth
 
-from ui_error import PageInfoError
-from ui_tool import print_flush
+from .ui_error import PageInfoError
+from .ui_tool import print_flush
 
 class PageInfo:
     def __init__(self, page_name: list[list[str]], start_index=1):

@@ -1,72 +1,59 @@
-from lib.recording import Recorder
-from lib.sql_commands import SqlCommands
-from lib.cmd_ui import UIFunction, UI, get_key
 import os
+import cv2
+from lib import UI, UIFunction, PageInfo, ArgsKwargs, Status
+from lib import SqlCommands
+from lib import Recorder
+from lib import CameraCapture
+from lib import get_key
 
-def get_file_sequence(file_path):
+def get_file_sequence(file_path, file_type):
     file_sequence = []
     for file in os.listdir(file_path):
-        if file.endswith(".wav"):
+        if file.endswith(file_type):
             file_sequence.append(file)
     return file_sequence
-
+def print_i():
+    print()
 
 if __name__ == "__main__":
-    sql = SqlCommands()
-    sql.connect_to_database()
-    recorder = Recorder()
-    page_name = [
+    index_name = [
         ["up", "down", "left", "right", "start", "rotation", "stop"],
         ["上", "下", "左", "右", "開始", "旋轉", "停止"],
-    ]
-    ui_functions = [
+        ["讚上", "讚下", "讚左", "讚右"]
+        ]
+    cap = cv2.VideoCapture(0)
+    recorder = Recorder()
+    camera_capture = CameraCapture(cap)
+    function = [
         UIFunction(title="錄製", running="錄音中", finish="錄音完畢", function=recorder.record_audio),
         UIFunction(title="錄製", running="錄音中", finish="錄音完畢", function=recorder.record_audio),
+        UIFunction(title="拍攝", running="拍攝中", finish="拍攝完畢", function=camera_capture.camera_capture),
     ]
-    ui = UI(page_name, ui_functions)
-    try:
-        last_file = sql.select_latest_data()[1]
-    except Exception as e:
-        print(e)
-        last_file = None
-    ui.show(last_file)
+    status_function = [
+        Status(camera_capture.start_status, print_i),
+        Status(print_i, camera_capture.start_status),
+        Status(camera_capture.stop_status, camera_capture.stop_status),
+    ]
+    ui = UI(index_name, function, status_function)
+    ui.show()
+    status = [
+        [None, None],
+        [None, None],
+        [None, None]
+    ]
     while True:
-        try:
-            last_file = sql.select_latest_data()[1]
-        except Exception as e:
-            last_file = None
         key = get_key()
         if key is None:
             continue
         if key == "p":
-            ui.previous_page()
-            ui.show(last_file)
+            ui.previous_page(args_kwargs=status)
         elif key == "n":
-            ui.next_page()
-            ui.show(last_file)
+            ui.next_page(args_kwargs=status)
         elif key == "\x1b":
             ui.exit()
             break
-        elif key == "d":
-            sql.delete_last_data()
-            try:
-                last_file = sql.select_latest_data()[1]
-            except Exception as e:
-                last_file = None
-            ui.show(last_file)
         elif key > "0" and key <= "9":
-            ui.show(last_file)
-            file_name = ui.names()[int(key) - 1]
-            if file_name is not None:
-                save_path = os.path.join(os.getcwd(), f"page_{ui.page() + 1}", file_name)
-            else:
-                save_path = os.getcwd()
-            path = ui.run_function(int(key) - 1, save_path, file_name)
-            if file_name is not None:
-                sql.insert_file_path(path)
-                try:
-                    last_file = sql.select_latest_data()[1]
-                except Exception as e:
-                    last_file = None
-                ui.show(last_file)
-                ui.finish_function()
+            ui.show()
+            args_kwargs = ArgsKwargs(save_path="test", file_name="test")
+            result = ui.run_function(int(key) - 1, args_kwargs)
+            print(result)
