@@ -1,27 +1,51 @@
 import os
 import cv2
-from lib import UI, UIFunction, PageInfo, ArgsKwargs, Status
+from lib import UI, UIFunction, ArgsKwargs, Status
 from lib import SqlCommands
 from lib import Recorder
 from lib import CameraCapture
 from lib import get_key, print_flush
-
+def set_folder(index_name):
+    file_path = []
+    for page, names in enumerate(index_name):
+        file_path.append([])
+        page_str = f"page_{page+1}"
+        if not os.path.exists(page_str):
+            os.makedirs(page_str)
+        for path in names:
+            full_path = os.path.join(page_str, path)
+            if not os.path.exists(full_path):
+                os.makedirs(full_path)
+            file_path[page].append(full_path)
+    return file_path
 def get_file_sequence(file_path, file_type):
     file_sequence = []
-    for file in os.listdir(file_path):
-        if file.endswith(file_type):
-            file_sequence.append(file)
+    for page, folders in enumerate(file_path):
+        file_sequence.append([])
+        for path in folders:
+            count = 0
+            for file in os.listdir(path):
+                if file.endswith(file_type):
+                    count += 1
+            file_sequence[page].append(count)
     return file_sequence
 def print_i():
     # print()
     pass
-
+def get_last_file(sql):
+    return sql.select_last_data()[1]
 if __name__ == "__main__":
     index_name = [
         ["up", "down", "left", "right", "start", "rotation", "stop"],
         ["上", "下", "左", "右", "開始", "旋轉", "停止"],
         ["讚上", "讚下", "讚左", "讚右"]
         ]
+    file_type = [".wav", ".wav", ".jpg"]
+    file_path = set_folder(index_name)
+    file_sequence = get_file_sequence(file_path, file_type)
+    print(file_sequence)
+    exit()
+    sql = SqlCommands()
     cap = cv2.VideoCapture(1)
     recorder = Recorder()
     camera_capture = CameraCapture(cap)

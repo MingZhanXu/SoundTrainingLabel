@@ -1,6 +1,5 @@
 import sqlite3
 import atexit
-import time
 from datetime import datetime
 
 
