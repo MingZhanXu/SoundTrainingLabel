@@ -93,19 +93,25 @@ class UIPage():
     ###########################################################################################################################
     
     ###########################################################################################################################
-    def show_page(self, names, func_type, page_info, last_file=None):
+    def show_page(self, names, func_type, page_info, last_file, file_sequence):
         page, max_page = page_info
         print_flush(self.__up_divider)
         print_flush(self.__title % (page + 1))
         print_flush(self.__divider)
         padding = 8 - wcswidth(func_type)
         func_type = func_type + ' ' * padding
+        file_sequence_len = 0
+        if file_sequence is not None:
+            file_sequence_len = len(file_sequence)
         for index, name in enumerate(names):
             if name is None:
                 name = self.__null_index
             padding = 12 - wcswidth(name)
             name = name +  ' ' * padding
-            print_flush(self.__info % (index + 1, func_type, name, 0))
+            sequence = 0
+            if file_sequence_len > index:
+                sequence = file_sequence[index]
+            print_flush(self.__info % (index + 1, func_type, name, sequence))
         print_flush(self.__divider)
         print_flush(self.__page_key % (page + 1, max_page))
         print_flush(self.__down_divider)
@@ -123,26 +129,3 @@ class UIPage():
     def no_index(self):
         print_flush(self.__no_index, end="")
 
-if __name__ == "__main__":
-    # 測試 UI 頁面
-    names = ["a", "b", "c", "d", "e"]
-    func_type = "test"
-    page_info = (1, 2)
-    finish = "finish_test"
-    running = "running"
-    ui_page = UIPage()
-    ui_page.show_page(names, func_type, page_info)
-    ui_page.run_function(running)
-    ui_page.finish_function(finish)
-    ui_page.exit()
-    # 測試 UIInfo
-    page_name = [
-        ["up", "down", "left", "right", "start", "rotation", "stop"],
-        ["上", "下", "左", "右", "開始", "旋轉", "停止"],
-    ]
-    page_info = PageInfo(page_name)
-    pages = page_info.page_info()
-    ui_page.show_page(page_info.names(), func_type, pages)
-    page_info.next_page()
-    pages = page_info.page_info()
-    ui_page.show_page(page_info.names(), func_type, pages)

@@ -1,7 +1,7 @@
 import traceback
 from .ui_tool import get_key, clear_screen, print_flush
 from .ui_error import UIError
-from .ui_type import ArgsKwargs, Status
+from .ui_type import ArgsKwargs, Status, FileSequence
 from .ui_page import PageInfo, UIPage
 from .ui_function import UIFunction
 
@@ -16,12 +16,14 @@ class UI(PageInfo, UIPage):
         self.__function = function
         self.__status_function = status_function
     
-    def show(self, last_file=None):
+    def show(self, file_sequence=FileSequence()):
         clear_screen()
-        self.show_info(last_file)
-    def show_info(self, last_file=None):
+        last_file = file_sequence.last_file()
+        file_sequence = file_sequence.sequence(self.page())
+        self.__show_info(last_file, file_sequence)
+    def __show_info(self, last_file, file_sequence):
         func_type = self.__function[self.page()].title()
-        super().show_page(self.names(), func_type, self.page_info(), last_file)
+        super().show_page(self.names(), func_type, self.page_info(), last_file, file_sequence)
     def finish_function(self, index):
         finish = self.__function[self.page()].finish_title()
         if index > len(self.__no_none_name[self.page()]) - 1:
@@ -29,7 +31,7 @@ class UI(PageInfo, UIPage):
             return None
         super().finish_function(finish)
 
-    def run_function(self, index, arg_kwargs: ArgsKwargs):
+    def run_function(self, index, arg_kwargs=ArgsKwargs()):
         running = self.__function[self.page()].title()
         if index > len(self.__no_none_name[self.page()]) - 1:
             super().no_index()
@@ -42,18 +44,18 @@ class UI(PageInfo, UIPage):
         
         return result
     
-    def next_page(self, last_fie=None, args_kwargs = list[list[ArgsKwargs|None]]):
+    def next_page(self, file_sequence=FileSequence(), args_kwargs = list[list[ArgsKwargs|None]]):
         super().next_page()
-        self.show(last_fie)
+        self.show(file_sequence)
         self.change_status(args_kwargs)
 
-    def previous_page(self, last_file=None, args_kwargs = list[list[ArgsKwargs|None]]):
+    def previous_page(self, file_sequence=FileSequence(), args_kwargs = list[list[ArgsKwargs|None]]):
         super().previous_page()
-        self.show(last_file)
+        self.show(file_sequence)
         self.change_status(args_kwargs)
     
-    def start(self, args_kwargs: list[list[ArgsKwargs|None]], last_file=None):
-        self.show(last_file)
+    def start(self, file_sequence=FileSequence(), args_kwargs = list[list[ArgsKwargs|None]]):
+        self.show(file_sequence)
         self.change_status(args_kwargs)
 
     def change_status(self, args_kwargs = list[list[ArgsKwargs|None]]):
