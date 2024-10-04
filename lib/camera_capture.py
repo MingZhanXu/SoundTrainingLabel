@@ -1,5 +1,6 @@
 import cv2
 import os
+import shutil
 from time import sleep
 import threading
 import msvcrt
@@ -60,7 +61,11 @@ class CameraCapture():
         if frame is None:
             return None
         file_path = os.path.join(save_path, f"{file_name}.jpg")
-        cv2.imwrite(file_path, frame)
+        temp_file_path = "tmp.jpg"
+        source = cv2.imwrite(temp_file_path, frame)
+        if source:
+            shutil.move(temp_file_path, file_path)
+        print(source)
         return file_path
     def camera_capture(self, save_path, file_name):
         result = self.frame_to_file(save_path, file_name)

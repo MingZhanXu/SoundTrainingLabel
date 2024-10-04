@@ -53,5 +53,9 @@ class FileSequence:
         page, index = path
         self.__sequence[page][index] += 1
         self.__last_file = last_file
+    def del_file(self, path:tuple[int, int], last_file:str):
+        page, index = path
+        self.__sequence[page][index] -= 1
+        self.__last_file = last_file
     def __str__(self) -> str:
         return f"last_file: {self.__last_file}, sequence: {self.__sequence}"
