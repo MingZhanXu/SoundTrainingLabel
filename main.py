@@ -98,13 +98,14 @@ if __name__ == "__main__":
             index = index_name[page].index(parts[1])
             try:
                 os.remove(del_file)
-                sql.delete_last_data()
-                last_file = get_last_file(sql)
-                file_info.del_file((page, index), last_file)
-                ui.show(file_info)
-                print_flush(f" 檔案已刪除 {del_file}")
+                msg_str = f" 檔案已刪除 {del_file}"
             except Exception as e:
-                print(e)
+                msg_str = f" 檔案不存在 {del_file}"
+            sql.delete_last_data()
+            last_file = get_last_file(sql)
+            file_info.del_file((page, index), last_file)
+            ui.show(file_info)
+            print_flush(msg_str)
         elif key > "0" and key <= "9":
             ui.show(file_info)
             index = int(key) - 1

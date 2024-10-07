@@ -64,8 +64,11 @@ class CameraCapture():
         temp_file_path = "tmp.jpg"
         source = cv2.imwrite(temp_file_path, frame)
         if source:
-            shutil.move(temp_file_path, file_path)
-        print(source)
+            try:
+                shutil.move(temp_file_path, file_path)
+            except Exception as e:
+                os.makedirs(os.path.dirname(file_path), exist_ok=True)
+                shutil.move(temp_file_path, file_path)
         return file_path
     def camera_capture(self, save_path, file_name):
         result = self.frame_to_file(save_path, file_name)
